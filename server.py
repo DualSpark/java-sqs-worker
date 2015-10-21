@@ -1,5 +1,6 @@
 import boto3
 import json
+from subprocess import call
 
 # Get the service resource
 sqs_service = boto3.resource('sqs', region_name='us-east-1')
@@ -15,7 +16,11 @@ message = message_list[0]
 body = json.loads(message.body)
 #print("First message body: ", body)
 
+# Save message body (job description) to disk:
+# Save to job.json
+
 # delete message
+# disabled for debug/dev purposes
 #sqs_client.delete_message(QueueUrl=queue.url,ReceiptHandle=message.receipt_handle)
 
 # get where to download things from S3
@@ -23,9 +28,13 @@ constraints_location = body['constraints_location']
 print("constraints_location from body: ", constraints_location)
 
 # download from S3
-s3.download_file("bucketname", "filename", "localfilename")
+# Temp hardcoding, later on we'll extract from constraints_location
+s3_client.download_file('javasqsworker12345', 'sample-constraints-1.json', 'constraints.json')
 
 # run program
+call(["java", "-jar javasqsworker-1.0-SNAPSHOT.jar job.json constraints.json"])
 
 # upload results to S3
-#s3.Bucket('mybucket').upload_file('/tmp/hello.txt', 'hello.txt')
+#s3_client.Bucket('javasqsworker12345').upload_file('output.zip', 'output.zip')
+
+# Clean up job, constraints and output files.
