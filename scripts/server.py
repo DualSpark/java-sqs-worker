@@ -22,28 +22,25 @@ if len(message_list) == 0:
 
 message = message_list[0]
 
-# delete message
 sqs_client.delete_message(QueueUrl=queue.url,ReceiptHandle=message.receipt_handle)
 
-body = json.loads(message.body)
-
 # body has two fields: bucket and folder.  Extract those.
+body = json.loads(message.body)
 bucket = body['bucket']
 folder = body['folder']
 
+# TODO: polishing around if the dir already exists from a previous run
 call(["mkdir", "temp-work"])
 
-object_location = folder + '/job-input.zip'
-print('downloading object at ' + object_location)
-
 # download job-input.zip:
-s3_client.download_file(bucket, object_location, 'temp-work/job-input.zip')
+input_file_location = folder + '/job-input.zip'
+s3_client.download_file(bucket, input_file_location, 'temp-work/job-input.zip')
 
 # unzip job-input
 call(["unzip", "temp-work/job-input.zip", "-d", "temp-work/"])
 
 # run bidmaster on job-input
-print("Would have called the java process here")
+print("Would have called the java process here, faking outputs for testing")
 # pretending we have results from bidmaster:
 f = open('temp-work/logfile.log', 'w')
 f.write('logs')
@@ -65,5 +62,4 @@ call(["zip", "temp-work/job-output.zip", "temp-work/logfile.log", "temp-work/std
 s3_client.upload_file('temp-work/job-output.zip', bucket, folder + '/job-output.zip')
 
 # Clean up job, constraints and output files.
-# print("Would have deleted the temp-work folder here")
 call(["rm", "-rf", "temp-work/"])
