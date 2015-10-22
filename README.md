@@ -12,19 +12,29 @@ The SQS message includes the work definition file and the S3 location of the var
 
 See [bmserver.py](scripts/bmserver.py).
 
-## Server init.d script
+## Server scripts
 
-Included is an [init.d script](scripts/bmserver) to treat the program as a service.  On the EC2 instance:
+Included is an [upstart script](scripts/bmserver.conf) to treat the program as a service that
+will automatically restart if needed.  
+
+Copy files to the instance with SCP.  This would be replaced with letting [packer.io](packer.io)
+doing the work automatically:
 
 ```bash
-chmod +x bmserver
-sudo cp bmserver /etc/init.d/bmserver
-sudo chkconfig bmserver on
-sudo service bmserver start
+scp -i ~/.ssh/KEYPAIR.pem bmserver.conf ec2-user@IPADDRESS:~/
+scp -i ~/.ssh/KEYPAIR.pem bmlogs.conf ec2-user@IPADDRESS:~/
+scp -i ~/.ssh/KEYPAIR.pem bmserver.py ec2-user@IPADDRESS:~/
 ```
 
-The init script will run the Python script on startup with the `chkconfig bmserver on` line and start it
-manually immediately with the `service bmserver start` command.
+On the EC2 instance:
+
+```bash
+sudo pip install boto3
+sudo cp bmserver.conf /etc/init/bmserver.conf
+sudo start bmserver
+sudo cp bmlogs.conf /etc/logrotate.d/bmserver
+```
+
 
 ## Client shell script
 
