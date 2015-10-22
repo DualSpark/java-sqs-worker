@@ -30,3 +30,7 @@ aws sqs send-message --region us-east-1 --queue-url https://sqs.us-east-1.amazon
 
 # clean up:
 rm job-input.zip sqs-message.json
+
+echo "Job has been sent, results will be available at s3://javasqsworker12345/$timestamp/job-output.zip when finished."
+echo "To download, run: \naws s3 cp s3://javasqsworker12345/$timestamp/job-output.zip ./\n"
+echo "To see if the output file is present, run: \naws s3 ls s3://javasqsworker12345/$timestamp/"
