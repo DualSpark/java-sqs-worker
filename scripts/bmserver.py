@@ -1,7 +1,10 @@
 import boto3
 import json
 import time
+import logging
 from subprocess import call
+
+logging.basicConfig(format='%(asctime)s %(message)s')
 
 # Get the service resource
 sqs_service = boto3.resource('sqs', region_name='us-east-1')
@@ -16,7 +19,7 @@ while True:
     message_list = queue.receive_messages(MaxNumberOfMessages=1, WaitTimeSeconds=5)
 
     if len(message_list) == 0:
-        print("Didn't get a message, waiting and trying again...")
+        logging.warning("Didn't get a message, waiting and trying again...")
         time.sleep(30)
         continue
 
@@ -40,7 +43,7 @@ while True:
     call(["unzip", "temp-work/job-input.zip", "-d", "temp-work/"])
 
     # run bidmaster on job-input
-    print("Would have called the java process here, faking outputs for testing")
+    logging.warning("Would have called the java process here, faking outputs for testing")
     # pretending we have results from bidmaster:
     f = open('temp-work/logfile.log', 'w')
     f.write('logs')
@@ -64,4 +67,4 @@ while True:
     # Clean up job, constraints and output files.
     call(["rm", "-rf", "temp-work/"])
 
-    print("Done with the job, looking at SQS queue for more work.")
+    logging.warning("Done with the job, looking at SQS queue for more work.")
