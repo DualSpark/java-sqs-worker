@@ -17,7 +17,7 @@ See [bmserver.py](scripts/bmserver.py).
 Included is an [upstart script](scripts/bmserver.conf) to treat the program as a service that
 will automatically restart if needed.  
 
-Copy files to the instance with SCP.  This would be replaced with letting [packer.io](packer.io)
+Copy files to the instance with SCP.  This would be replaced with letting [packer.io](http://packer.io)
 doing the work automatically:
 
 ```bash
