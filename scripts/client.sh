@@ -5,7 +5,7 @@ echo "Script to send files to S3 and work definitions to SQS."
 # Set S3 bucket name here:
 s3bucket="javasqsworker12345"
 # Set SQS URL here:
-queueUrl="https://sqs.us-east-1.amazonaws.com/347452556413/javasqsworker"
+queueUrl="https://sqs.us-east-1.amazonaws.com/347452556413/asgtester"
 
 # we should be passed a job definition and a constraints/variable file, in that order
 if [ "$#" -ne 2 ]; then

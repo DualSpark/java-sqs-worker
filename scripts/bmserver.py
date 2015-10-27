@@ -22,12 +22,16 @@ def pretend_java_call(message):
 def call_java(message):
     pretend_java_call(message)
 
-    # bidmaster_job = Popen(["java", "-jar javasqsworker-1.0-SNAPSHOT.jar temp-work/job.json temp-work/constraints.json"])
-    #
-    # while bidmaster_job.poll() is None:
-    #     # sleep and keep waiting to finish:
-    #     logging.warning("Bidmaster job still running, waiting 30s before checking again")
-    #     time.sleep(30)
+    # This won't take down our Python script if it exits poorly:
+    bidmaster_job = Popen(["java", "-jar", "../target/javasqsworker-1.0-SNAPSHOT.jar", "temp-work/job.json", "temp-work/constraints.json"])
+
+    while bidmaster_job.poll() is None:
+        # sleep and keep waiting to finish:
+        logging.warning("Bidmaster job still running, waiting 5s before checking again")
+        time.sleep(5)
+
+    # We probably want to return this to mark the job as "something went wrong."
+    logging.warning('bidmaster_job return code: %s', bidmaster_job.returncode)
 
 
 def main():
@@ -61,15 +65,14 @@ def main():
         bucket = body['bucket']
         folder = body['folder']
 
-        # TODO: polishing around if the dir already exists from a previous run
-        call(["mkdir", "temp-work"])
+        call(["mkdir", "-p", "temp-work"])
 
         # download job-input.zip:
         input_file_location = folder + '/job-input.zip'
         s3_client.download_file(bucket, input_file_location, 'temp-work/job-input.zip')
 
         # unzip job-input
-        call(["unzip", "temp-work/job-input.zip", "-d", "temp-work/"])
+        call(["unzip", "-o", "temp-work/job-input.zip", "-d", "temp-work/"])
 
         # run bidmaster on job-input
         call_java(message)
