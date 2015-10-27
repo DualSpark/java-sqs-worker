@@ -4,7 +4,8 @@ import time
 import logging
 from subprocess import call, Popen
 
-def pretend_java_call():
+
+def pretend_java_call(message):
     logging.warning("Would have called the java process here, faking outputs for testing")
     # pretending we have results from bidmaster:
     f = open('temp-work/logfile.log', 'w')
@@ -17,18 +18,17 @@ def pretend_java_call():
     f.write('results')
     f.close()
 
+
 def call_java(message):
-    pretend_java_call()
+    pretend_java_call(message)
 
-    bidmaster_ob = Popen(["java", "-jar javasqsworker-1.0-SNAPSHOT.jar temp-work/job.json temp-work/constraints.json"])
+    # bidmaster_job = Popen(["java", "-jar javasqsworker-1.0-SNAPSHOT.jar temp-work/job.json temp-work/constraints.json"])
+    #
+    # while bidmaster_job.poll() is None:
+    #     # sleep and keep waiting to finish:
+    #     logging.warning("Bidmaster job still running, waiting 30s before checking again")
+    #     time.sleep(30)
 
-    while bidmaster_ob.poll() is None:
-        # Mark our message as still in progress:
-        message.change_message_visibility(VisibilityTimeout=43200) # max of 12 hours
-
-        # sleep and keep waiting to finish:
-        logging.warning("Bidmaster job still running, waiting 30s before checking again")
-        time.sleep(30)
 
 def main():
     logging.basicConfig(format='%(asctime)s %(message)s')
@@ -39,7 +39,7 @@ def main():
     s3_client = boto3.client('s3', region_name='us-east-1')
 
     # Get the queue. This returns an SQS.Queue instance
-    queue = sqs_service.get_queue_by_name(QueueName='javasqsworker')
+    queue = sqs_service.get_queue_by_name(QueueName='asgtester')
 
     while True:
         logging.warning('Checking SQS for work to do.')
@@ -53,6 +53,8 @@ def main():
             continue
 
         message = message_list[0]
+
+        sqs_client.delete_message(QueueUrl=queue.url, ReceiptHandle=message.receipt_handle)
 
         # body has two fields: bucket and folder.  Extract those.
         body = json.loads(message.body)
@@ -70,15 +72,11 @@ def main():
         call(["unzip", "temp-work/job-input.zip", "-d", "temp-work/"])
 
         # run bidmaster on job-input
-        # NOTE: this could take 30 hours or more to run.  We may have to call ChangeMessageVisibility
-        # so nobody else picks it up.
         call_java(message)
 
-        # Don't delete the message until we've completed the work.
-        sqs_client.delete_message(QueueUrl=queue.url,ReceiptHandle=message.receipt_handle)
-
         # zip results, log file, stdout from bidmaster to job-output.zip
-        call(["zip", "temp-work/job-output.zip", "temp-work/logfile.log", "temp-work/stdout.log", "temp-work/results.txt"])
+        call(["zip", "temp-work/job-output.zip", "temp-work/logfile.log", "temp-work/stdout.log",
+              "temp-work/results.txt"])
 
         # upload results to bucket/folder/job-output.zip
         s3_client.upload_file('temp-work/job-output.zip', bucket, folder + '/job-output.zip')
