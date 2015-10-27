@@ -78,8 +78,7 @@ def main():
         call_java(message)
 
         # zip results, log file, stdout from bidmaster to job-output.zip
-        call(["zip", "temp-work/job-output.zip", "temp-work/logfile.log", "temp-work/stdout.log",
-              "temp-work/results.txt"])
+        call(["zip", "temp-work/job-output.zip", "temp-work/*", "-x", "job-input.zip"])
 
         # upload results to bucket/folder/job-output.zip
         s3_client.upload_file('temp-work/job-output.zip', bucket, folder + '/job-output.zip')
