@@ -20,6 +20,7 @@ def pretend_java_call(message):
 
 
 def call_java(message):
+    # remove this once we don't need to simulate output files:
     pretend_java_call(message)
 
     # This won't take down our Python script if it exits poorly:
@@ -78,7 +79,7 @@ def main():
         call_java(message)
 
         # zip results, log file, stdout from bidmaster to job-output.zip
-        call(["zip", "temp-work/job-output.zip", "temp-work/*", "-x", "job-input.zip"])
+        call(["zip", "temp-work/job-output.zip", "temp-work"])
 
         # upload results to bucket/folder/job-output.zip
         s3_client.upload_file('temp-work/job-output.zip', bucket, folder + '/job-output.zip')
@@ -86,7 +87,11 @@ def main():
         # Clean up job, constraints and output files.
         call(["rm", "-rf", "temp-work/"])
 
-        logging.warning("Done with the job, looking at SQS queue for more work.")
+        logging.warning("Done with the job, checking to see if we should terminate ourselves.")
+
+        # call scaledown.py: if it returns, keep going.
+        # if it doesn't return it's because we're shutting down.
+        call(["python", "scaledown.py"])
 
 
 if __name__ == "__main__":

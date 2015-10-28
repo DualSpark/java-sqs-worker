@@ -29,6 +29,8 @@ scp -i ~/.ssh/KEYPAIR.pem bmserver.py ec2-user@IPADDRESS:~/
 On the EC2 instance:
 
 ```bash
+sudo yum install -y gcc
+sudo pip install psutil
 sudo pip install boto3
 sudo cp bmserver.conf /etc/init/bmserver.conf
 sudo start bmserver
