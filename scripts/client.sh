@@ -27,8 +27,11 @@ aws s3 cp job-input.zip s3://$s3bucket/$timestamp/job-input.zip
 # Send work message to SQS: needs bucket name, folder name to use.
 # Server will assume job-input.zip is in bucket/foldername.
 
+baseFile=$(basename $1)
+# echo "baseFile is $baseFile"
+
 # echo 'Would send this JSON in SQS message: {"bucket":"javasqsworker12345", "folder":"'$timestamp'"}'
-echo '{"bucket":"'$s3bucket'", "folder":"'$timestamp'"}' > sqs-message.json
+echo '{"bucket":"'$s3bucket'", "folder":"'$timestamp'", "parameters":"'$baseFile'"}' > sqs-message.json
 
 aws sqs send-message --region us-east-1 --queue-url $queueUrl --message-body file://sqs-message.json
 

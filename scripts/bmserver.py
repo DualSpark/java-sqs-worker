@@ -5,27 +5,26 @@ import logging
 from subprocess import call, Popen
 
 
-def pretend_java_call(message):
-    logging.warning("Would have called the java process here, faking outputs for testing")
-    # pretending we have results from bidmaster:
-    f = open('/home/ec2-user/temp-work/logfile.log', 'w')
-    f.write('logs')
-    f.close()
-    f = open('/home/ec2-user/temp-work/stdout.log', 'w')
-    f.write('stdout')
-    f.close()
-    f = open('/home/ec2-user/temp-work/results.txt', 'w')
-    f.write('results')
-    f.close()
+# def pretend_java_call():
+#     logging.warning("Would have called the java process here, faking outputs for testing")
+#     # pretending we have results from bidmaster:
+#     f = open('/home/ec2-user/temp-work/logfile.log', 'w')
+#     f.write('logs')
+#     f.close()
+#     f = open('/home/ec2-user/temp-work/stdout.log', 'w')
+#     f.write('stdout')
+#     f.close()
+#     f = open('/home/ec2-user/temp-work/results.txt', 'w')
+#     f.write('results')
+#     f.close()
 
 
-def call_java(message):
+def call_java(parameters_file):
     # remove this once we don't need to simulate output files:
-    pretend_java_call(message)
+    # pretend_java_call()
 
     # This won't take down our Python script if it exits poorly:
-    bidmaster_job = Popen(["java", "-jar", "/home/ec2-user/javasqsworker-1.0-SNAPSHOT.jar",
-                           "/home/ec2-user/temp-work/job.json", "/home/ec2-user/temp-work/constraints.json"])
+    bidmaster_job = Popen(["/home/bidmaster/bidmaster.sh", parameters_file])
 
     while bidmaster_job.poll() is None:
         # sleep and keep waiting to finish:
@@ -70,10 +69,11 @@ def main():
 
         sqs_client.delete_message(QueueUrl=queue.url, ReceiptHandle=message.receipt_handle)
 
-        # body has two fields: bucket and folder.  Extract those.
+        # body has three fields: bucket, folder, parameters file.  Extract those.
         body = json.loads(message.body)
         bucket = body['bucket']
         folder = body['folder']
+        parameters_file = body['parameters']
 
         call(["mkdir", "-p", "/home/ec2-user/temp-work"])
 
@@ -85,7 +85,7 @@ def main():
         call(["unzip", "-o", "/home/ec2-user/temp-work/job-input.zip", "-d", "/home/ec2-user/temp-work/"])
 
         # run bidmaster on job-input
-        call_java(message)
+        call_java("/home/ec2-user/temp-work/" + parameters_file)
 
         # zip results, log file, stdout from bidmaster to job-output.zip
         call(["zip", "/home/ec2-user/temp-work/job-output.zip", "/home/ec2-user/temp-work"])
