@@ -53,7 +53,12 @@ def main():
         message_list = queue.receive_messages(MaxNumberOfMessages=1, WaitTimeSeconds=5)
 
         if len(message_list) == 0:
-            logging.warning("Didn't get a message, waiting 30s and trying again...")
+            logging.warning("Didn't get a message, seeing if we need to shut down.")
+            # call scaledown.py: if it returns, keep going.
+            # if it doesn't return it's because we're shutting down.
+            call(["python", "/home/ec2-user/scaledown.py"])
+
+            logging.warning('no need to shut down, polling SQS after sleeping 30s')
             time.sleep(30)
             continue
 
@@ -88,10 +93,6 @@ def main():
         call(["rm", "-rf", "temp-work/"])
 
         logging.warning("Done with the job, checking to see if we should terminate ourselves.")
-
-        # call scaledown.py: if it returns, keep going.
-        # if it doesn't return it's because we're shutting down.
-        call(["python", "scaledown.py"])
 
 
 if __name__ == "__main__":

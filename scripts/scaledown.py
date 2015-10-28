@@ -43,8 +43,8 @@ def main():
 
         logging.warning('Java not running on this instance and queue empty alarm tripped: terminating this instance.')
 
-        instance_id = check_output(["ec2-metadata", "-i"]).replace('instance-id: ', '')
-        logging.warning('We are instance id %s', instance_id)
+        instance_id = check_output(["/opt/aws/bin/ec2-metadata", "-i"]).replace('instance-id: ', '').replace('\n', '')
+        logging.warning('We are instance id "%s"', instance_id)
 
         client = boto3.client('autoscaling', region_name='us-east-1')
         client.terminate_instance_in_auto_scaling_group(
