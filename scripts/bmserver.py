@@ -2,6 +2,7 @@ import boto3
 import json
 import time
 import logging
+import os
 from subprocess import call, Popen
 
 
@@ -24,7 +25,7 @@ def call_java(parameters_file):
     # pretend_java_call()
 
     # This won't take down our Python script if it exits poorly:
-    bidmaster_job = Popen(["/home/bidmaster/bidmaster.sh", parameters_file])
+    bidmaster_job = Popen(["/home/bidmaster/BidMaster.sh", parameters_file])
 
     while bidmaster_job.poll() is None:
         # sleep and keep waiting to finish:
@@ -48,6 +49,9 @@ def main():
 
     # Get the queue. This returns an SQS.Queue instance
     queue = sqs_service.get_queue_by_name(QueueName='asgtester')
+
+    # may want to make this step options for easier local testing:
+    os.chdir('/home/ec2-user/')
 
     while True:
         logging.warning('Checking SQS for work to do.')
@@ -88,7 +92,7 @@ def main():
         call_java("/home/ec2-user/temp-work/" + parameters_file)
 
         # zip results, log file, stdout from bidmaster to job-output.zip
-        call(["zip", "/home/ec2-user/temp-work/job-output.zip", "/home/ec2-user/temp-work"])
+        call(["zip", "-r", "/home/ec2-user/temp-work/job-output.zip", "/home/ec2-user/temp-work"])
 
         # upload results to bucket/folder/job-output.zip
         s3_client.upload_file('/home/ec2-user/temp-work/job-output.zip', bucket, '/home/ec2-user/' + folder + '/job-output.zip')
