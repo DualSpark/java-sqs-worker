@@ -46,7 +46,7 @@ def main():
         instance_id = check_output(["ec2-metadata", "-i"]).replace('instance-id: ', '')
         logging.warning('We are instance id %s', instance_id)
 
-        client = boto3.client('autoscaling')
+        client = boto3.client('autoscaling', region_name='us-east-1')
         client.terminate_instance_in_auto_scaling_group(
             InstanceId=instance_id,
             ShouldDecrementDesiredCapacity=True

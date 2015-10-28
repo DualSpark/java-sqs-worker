@@ -24,7 +24,7 @@ def call_java(message):
     pretend_java_call(message)
 
     # This won't take down our Python script if it exits poorly:
-    bidmaster_job = Popen(["java", "-jar", "../target/javasqsworker-1.0-SNAPSHOT.jar", "temp-work/job.json", "temp-work/constraints.json"])
+    bidmaster_job = Popen(["java", "-jar", "./javasqsworker-1.0-SNAPSHOT.jar", "temp-work/job.json", "temp-work/constraints.json"])
 
     while bidmaster_job.poll() is None:
         # sleep and keep waiting to finish:
