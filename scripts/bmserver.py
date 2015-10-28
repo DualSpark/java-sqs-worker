@@ -8,13 +8,13 @@ from subprocess import call, Popen
 def pretend_java_call(message):
     logging.warning("Would have called the java process here, faking outputs for testing")
     # pretending we have results from bidmaster:
-    f = open('temp-work/logfile.log', 'w')
+    f = open('/home/ec2-user/temp-work/logfile.log', 'w')
     f.write('logs')
     f.close()
-    f = open('temp-work/stdout.log', 'w')
+    f = open('/home/ec2-user/temp-work/stdout.log', 'w')
     f.write('stdout')
     f.close()
-    f = open('temp-work/results.txt', 'w')
+    f = open('/home/ec2-user/temp-work/results.txt', 'w')
     f.write('results')
     f.close()
 
@@ -24,7 +24,8 @@ def call_java(message):
     pretend_java_call(message)
 
     # This won't take down our Python script if it exits poorly:
-    bidmaster_job = Popen(["java", "-jar", "./javasqsworker-1.0-SNAPSHOT.jar", "temp-work/job.json", "temp-work/constraints.json"])
+    bidmaster_job = Popen(["java", "-jar", "/home/ec2-user/javasqsworker-1.0-SNAPSHOT.jar",
+                           "/home/ec2-user/temp-work/job.json", "/home/ec2-user/temp-work/constraints.json"])
 
     while bidmaster_job.poll() is None:
         # sleep and keep waiting to finish:
@@ -37,6 +38,9 @@ def call_java(message):
 
 def main():
     logging.basicConfig(format='%(asctime)s %(message)s')
+
+    logging.warning('Starting up, waiting 120s for credentials to become available.')
+    time.sleep(120)
 
     # Get the service resource
     sqs_service = boto3.resource('sqs', region_name='us-east-1')
@@ -71,26 +75,26 @@ def main():
         bucket = body['bucket']
         folder = body['folder']
 
-        call(["mkdir", "-p", "temp-work"])
+        call(["mkdir", "-p", "/home/ec2-user/temp-work"])
 
         # download job-input.zip:
         input_file_location = folder + '/job-input.zip'
-        s3_client.download_file(bucket, input_file_location, 'temp-work/job-input.zip')
+        s3_client.download_file(bucket, input_file_location, '/home/ec2-user/temp-work/job-input.zip')
 
         # unzip job-input
-        call(["unzip", "-o", "temp-work/job-input.zip", "-d", "temp-work/"])
+        call(["unzip", "-o", "/home/ec2-user/temp-work/job-input.zip", "-d", "/home/ec2-user/temp-work/"])
 
         # run bidmaster on job-input
         call_java(message)
 
         # zip results, log file, stdout from bidmaster to job-output.zip
-        call(["zip", "temp-work/job-output.zip", "temp-work"])
+        call(["zip", "/home/ec2-user/temp-work/job-output.zip", "/home/ec2-user/temp-work"])
 
         # upload results to bucket/folder/job-output.zip
-        s3_client.upload_file('temp-work/job-output.zip', bucket, folder + '/job-output.zip')
+        s3_client.upload_file('/home/ec2-user/temp-work/job-output.zip', bucket, '/home/ec2-user/' + folder + '/job-output.zip')
 
         # Clean up job, constraints and output files.
-        call(["rm", "-rf", "temp-work/"])
+        call(["rm", "-rf", "/home/ec2-user/temp-work/"])
 
         logging.warning("Done with the job, checking to see if we should terminate ourselves.")
 

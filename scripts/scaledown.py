@@ -18,13 +18,14 @@ def java_is_running():
 
 def queue_empty_alarm_tripped():
     client = boto3.client('cloudwatch', region_name='us-east-1')
-    alarm = client.describe_alarms(AlarmNames=['noitemsinqueue'])
+    alarms = client.describe_alarms(AlarmNames=['noitemsinqueue'])
 
-    if len(alarm['MetricAlarms']) > 0:
-        logging.warning('we got something in metricalarms')
-        if alarm['MetricAlarms'][0]['StateValue'] == 'ALARM':
-            logging.warning('in alarm state')
-            return True
+    if len(alarms['MetricAlarms']) > 0:
+        for alarm in alarms['MetricAlarms']:
+            if alarm['AlarmName'] == 'noitemsinqueue':
+                if alarm['StateValue'] == 'ALARM':
+                    logging.warning('in alarm state for no messages in queue')
+                    return True
 
     return False
 
@@ -52,8 +53,9 @@ def main():
             ShouldDecrementDesiredCapacity=True
         )
 
-        # and we should be shutting down soon.  Stay here until we do:
-        time.sleep(10000)
+        # the above call will cause this script to abort if we're already at minimum instances.
+        logging.warning('We want to shut down, sent the command, waiting 600s in scaledown.py')
+        time.sleep(600)
 
 
 if __name__ == "__main__":
