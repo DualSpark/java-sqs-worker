@@ -1,18 +1,23 @@
 import boto3
-import time
 import logging
 from subprocess import check_output
 
 
 def java_is_running():
     # We'll need to actually check here, of course
-    client = boto3.client('cloudwatch')
-    
     return True
 
 
 def queue_empty_alarm_tripped():
-    # Actually check cloudwatch
+    client = boto3.client('cloudwatch', region_name='us-east-1')
+    alarm = client.describe_alarms(AlarmNames=['noitemsinqueue'])
+
+    if len(alarm['MetricAlarms']) > 0:
+        logging.warning('we got something in metricalarms')
+        if alarm['MetricAlarms'][0]['StateValue'] == 'ALARM':
+            logging.warning('in alarm state')
+            return True
+
     return False
 
 
