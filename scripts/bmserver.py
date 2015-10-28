@@ -95,7 +95,7 @@ def main():
         call(["zip", "-r", "/home/ec2-user/temp-work/job-output.zip", "/home/ec2-user/temp-work"])
 
         # upload results to bucket/folder/job-output.zip
-        s3_client.upload_file('/home/ec2-user/temp-work/job-output.zip', bucket, '/home/ec2-user/' + folder + '/job-output.zip')
+        s3_client.upload_file('/home/ec2-user/temp-work/job-output.zip', bucket, folder + '/job-output.zip')
 
         # Clean up job, constraints and output files.
         call(["rm", "-rf", "/home/ec2-user/temp-work/"])
