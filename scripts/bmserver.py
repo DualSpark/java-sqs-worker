@@ -1,9 +1,11 @@
 import boto3
+import psutil
 import json
 import time
 import logging
 import os
 from subprocess import call, Popen
+from botocore.exceptions import ClientError
 
 
 # def pretend_java_call():
@@ -19,19 +21,36 @@ from subprocess import call, Popen
 #     f.write('results')
 #     f.close()
 
+def kill(proc_pid):
+    process = psutil.Process(proc_pid)
+    for proc in process.children(recursive=True):
+        proc.kill()
+    process.kill()
 
-def call_java(parameters_file):
+def call_java(parameters_file, bucket, folder, s3_client):
     # chdir here
     # remove this once we don't need to simulate output files:
     # pretend_java_call()
 
     # This won't take down our Python script if it exits poorly:
-    bidmaster_job = Popen(["/home/bidmaster/BidMaster.sh", parameters_file])
+    bidmaster_job = Popen(["java", "-jar", "./javasqsworker-1.0-SNAPSHOT.jar"])
 
     while bidmaster_job.poll() is None:
-        # sleep and keep waiting to finish:
-        logging.warning("Bidmaster job still running, waiting 5s before checking again")
-        time.sleep(5)
+        logging.warning("Bidmaster job still running, no cancellation request, waiting 30s before checking again")
+        time.sleep(30)
+
+        try:
+            s3_client.head_object(Bucket=bucket, Key="cancellations/" + folder)
+            # Getting anything means the cancellation request is there.
+            logging.warning('Found cancellation request, aborting Java run.')
+            kill(bidmaster_job.pid)
+
+        except ClientError as e:
+            # May want to silently swallow exceptions instead of bloating logs:
+            error_code = int(e.response['Error']['Code'])
+            if error_code == 404:
+                logging.warning('Didn\'t find a cancellation, continuing...')
+
 
     # We probably want to return this to mark the job as "something went wrong."
     logging.warning('bidmaster_job return code: %s', bidmaster_job.returncode)
@@ -40,8 +59,8 @@ def call_java(parameters_file):
 def main():
     logging.basicConfig(format='%(asctime)s %(message)s')
 
-    logging.warning('Starting up, waiting 120s for credentials to become available.')
-    time.sleep(120)
+    # logging.warning('Starting up, waiting 120s for credentials to become available.')
+    # time.sleep(120)
 
     # Get the service resource
     sqs_service = boto3.resource('sqs', region_name='us-east-1')
@@ -90,7 +109,7 @@ def main():
         call(["unzip", "-o", "/home/ec2-user/temp-work/job-input.zip", "-d", "/home/ec2-user/temp-work/"])
 
         # run bidmaster on job-input
-        call_java("/home/ec2-user/temp-work/" + parameters_file)
+        call_java("/home/ec2-user/temp-work/" + parameters_file, bucket, folder, s3_client)
 
         # zip results, log file, stdout from bidmaster to job-output.zip
         call(["zip", "-r", "/home/ec2-user/temp-work/job-output.zip", "/home/ec2-user/temp-work"])

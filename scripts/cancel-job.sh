@@ -1,7 +1,5 @@
 #!/bin/sh
 
-echo "Script to cancel a job."
-
 # Set S3 bucket name here:
 s3bucket="javasqsworker12345"
 
@@ -17,4 +15,4 @@ aws s3 cp $1 s3://$s3bucket/cancellations/
 
 rm $1
 
-echo "Sent cancellation of job $1"
+echo "Sent cancellation request for job $1"

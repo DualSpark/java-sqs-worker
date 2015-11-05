@@ -3,6 +3,7 @@ import logging
 import psutil
 import time
 from subprocess import check_output
+from botocore.exceptions import ClientError
 
 
 def java_is_running():
@@ -48,10 +49,13 @@ def main():
         logging.warning('We are instance id "%s"', instance_id)
 
         client = boto3.client('autoscaling', region_name='us-east-1')
-        client.terminate_instance_in_auto_scaling_group(
-            InstanceId=instance_id,
-            ShouldDecrementDesiredCapacity=True
-        )
+        try:
+            client.terminate_instance_in_auto_scaling_group(
+                InstanceId=instance_id,
+                ShouldDecrementDesiredCapacity=True
+            )
+        except:
+            logging.warning('Can\'t scale down, we\'re the last instance left.')
 
         # the above call will cause this script to abort if we're already at minimum instances.
         logging.warning('We want to shut down, sent the command, waiting 600s in scaledown.py')
