@@ -60,8 +60,8 @@ def call_java(parameters_file, bucket, folder, s3_client):
 def main():
     logging.basicConfig(format='%(asctime)s %(message)s')
 
-    # logging.warning('Starting up, waiting 120s for credentials to become available.')
-    # time.sleep(120)
+    logging.warning('Starting up, waiting 120s for credentials to become available.')
+    time.sleep(120)
 
     # Get the service resource
     sqs_service = boto3.resource('sqs', region_name='us-east-1')
