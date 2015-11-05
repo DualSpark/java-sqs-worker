@@ -21,6 +21,7 @@ from subprocess import call, Popen
 
 
 def call_java(parameters_file):
+    # chdir here
     # remove this once we don't need to simulate output files:
     # pretend_java_call()
 
@@ -34,7 +35,7 @@ def call_java(parameters_file):
 
     # We probably want to return this to mark the job as "something went wrong."
     logging.warning('bidmaster_job return code: %s', bidmaster_job.returncode)
-
+    # chdir here
 
 def main():
     logging.basicConfig(format='%(asctime)s %(message)s')
