@@ -57,7 +57,6 @@ def main():
         except:
             logging.warning('Can\'t scale down, we\'re the last instance left.')
 
-        # the above call will cause this script to abort if we're already at minimum instances.
         logging.warning('We want to shut down, sent the command, waiting 600s in scaledown.py')
         time.sleep(600)
 
