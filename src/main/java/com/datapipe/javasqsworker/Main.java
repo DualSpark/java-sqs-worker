@@ -4,7 +4,7 @@ public class Main {
 
     private static void sleep() {
         try {
-            Thread.sleep(500);
+            Thread.sleep(5000);
         } catch(InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
@@ -19,8 +19,8 @@ public class Main {
             sleep();
         }
 
-        throw new Exception("whoops something went wrong!");
+        //throw new Exception("whoops something went wrong!");
 
-//        System.out.println("Done processing.");
+        System.out.println("Done processing.");
     }
 }

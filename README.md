@@ -43,3 +43,9 @@ sudo cp bmlogs.conf /etc/logrotate.d/bmserver
 A wrapper around the AWS CLI to upload the variables/constraints file to S3 and send an SQS message of a work file.
 
 See [client.sh](scripts/client.sh).
+
+### Cancelling a job
+
+Cancellations can be signaled via the S3 bucket's "cancellations" folder.  Use [cancel-job.sh](scripts/cancel-job.sh)
+to cancel a job.  The SQS message will still pick up the work to do but the instance performing
+the work will cancel the job after a few minutes and move on to the next item of work.
