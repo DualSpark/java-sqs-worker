@@ -34,7 +34,7 @@ def call_java(parameters_file, bucket, folder, s3_client):
     # pretend_java_call()
 
     # This won't take down our Python script if it exits poorly:
-    bidmaster_job = Popen(["java", "-jar", "./javasqsworker-1.0-SNAPSHOT.jar"])
+    bidmaster_job = Popen(["/home/bidmaster/BidMaster.sh", parameters_file])
 
     while bidmaster_job.poll() is None:
         logging.warning("Bidmaster job still running, no cancellation request, waiting 30s before checking again")
