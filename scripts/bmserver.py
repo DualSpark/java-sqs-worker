@@ -7,20 +7,6 @@ import os
 from subprocess import call, Popen
 from botocore.exceptions import ClientError
 
-
-# def pretend_java_call():
-#     logging.warning("Would have called the java process here, faking outputs for testing")
-#     # pretending we have results from bidmaster:
-#     f = open('/home/ec2-user/temp-work/logfile.log', 'w')
-#     f.write('logs')
-#     f.close()
-#     f = open('/home/ec2-user/temp-work/stdout.log', 'w')
-#     f.write('stdout')
-#     f.close()
-#     f = open('/home/ec2-user/temp-work/results.txt', 'w')
-#     f.write('results')
-#     f.close()
-
 def kill(proc_pid):
     process = psutil.Process(proc_pid)
     for proc in process.children(recursive=True):
@@ -29,9 +15,7 @@ def kill(proc_pid):
 
 
 def call_java(parameters_file, bucket, folder, s3_client):
-    # chdir here
-    # remove this once we don't need to simulate output files:
-    # pretend_java_call()
+    # os.chdir('/home/ec2-user/temp-work/')
 
     # This won't take down our Python script if it exits poorly:
     bidmaster_job = Popen(["/home/bidmaster/BidMaster.sh", parameters_file])
@@ -54,7 +38,7 @@ def call_java(parameters_file, bucket, folder, s3_client):
 
     # We probably want to return this to mark the job as "something went wrong."
     logging.warning('bidmaster_job return code: %s', bidmaster_job.returncode)
-    # chdir here
+    # os.chdir('/home/ec2-user/')
 
 
 def main():
