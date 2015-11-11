@@ -44,7 +44,7 @@ def call_java(parameters_file, bucket, folder, s3_client):
 def send_completion_notice(folder):
     try:
         # Send job completion notice to SNS:
-        completion_message = 'Job completed: ' + folder
+        completion_message = 'Job completed: ' + folder + '.\nTo download results, run: \n\naws s3 cp s3://javasqsworker12345/' + folder + '/job-output.zip ./'
         # logging.warning('writing out this message as message body: \n' + completion_message)
 
         client = boto3.client('sns', region_name='us-east-1')
