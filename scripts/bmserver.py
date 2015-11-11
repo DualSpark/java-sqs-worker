@@ -38,8 +38,23 @@ def call_java(parameters_file, bucket, folder, s3_client):
 
     # We probably want to return this to mark the job as "something went wrong."
     logging.warning('bidmaster_job return code: %s', bidmaster_job.returncode)
+
     # os.chdir('/home/ec2-user/')
 
+def send_completion_notice(folder):
+    try:
+        # Send job completion notice to SNS:
+        completion_message = 'Job completed: ' + folder
+        # logging.warning('writing out this message as message body: \n' + completion_message)
+
+        client = boto3.client('sns', region_name='us-east-1')
+        client.publish(
+            TopicArn='arn:aws:sns:us-east-1:347452556413:bidmaster-status-updates',
+            Message=completion_message,
+            Subject='bidmaster job completed'
+        )
+    except ClientError as e:
+        logging.warning('Error sending SNS notification: ', e)
 
 def main():
     logging.basicConfig(format='%(asctime)s %(message)s')
@@ -95,6 +110,8 @@ def main():
 
         # run bidmaster on job-input
         call_java("/home/ec2-user/temp-work/" + parameters_file, bucket, folder, s3_client)
+
+        send_completion_notice(folder)
 
         # zip results, log file, stdout from bidmaster to job-output.zip
         call(["zip", "-r", "/home/ec2-user/temp-work/job-output.zip", "/home/ec2-user/temp-work"])
