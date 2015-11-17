@@ -13,6 +13,21 @@ def kill(proc_pid):
         proc.kill()
     process.kill()
 
+def push_update_to_s3(parameters_file, bucket, folder, s3_client):
+    f = open('bidmaster_partial.log', 'w')
+    f.write('List of rounds for job ' + parameters_file + ':\n')
+    f.close()
+
+    call("grep Round bidmaster.log >> bidmaster_partial.log", shell=True)
+
+    f = open('bidmaster_partial.log', 'a')
+    f.write('\nLast 100 lines from bidmaster log file:\n')
+    f.close()
+
+    call("tail  -100 bidmaster.log >> bidmaster_partial.log", shell=True)
+
+    s3_client.upload_file('/home/ec2-user/temp-work/bidmaster_partial.log', bucket, folder + '/bidmaster_partial.log')
+
 
 def call_java(parameters_file, bucket, folder, s3_client):
     # os.chdir('/home/ec2-user/temp-work/')
@@ -21,8 +36,9 @@ def call_java(parameters_file, bucket, folder, s3_client):
     bidmaster_job = Popen(["/home/bidmaster/BidMaster.sh", parameters_file])
 
     while bidmaster_job.poll() is None:
-        logging.warning("Bidmaster job still running, no cancellation request, waiting 30s before checking again")
-        time.sleep(30)
+        logging.warning("Bidmaster job still running, no cancellation request, waiting 10m before checking again")
+        time.sleep(600)
+        push_update_to_s3(parameters_file, bucket, folder, s3_client)
 
         try:
             s3_client.head_object(Bucket=bucket, Key="cancellations/" + folder)
